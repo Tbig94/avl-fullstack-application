@@ -1,0 +1,62 @@
+﻿@inject BlazorWasmClient.Services.ILocalStorageService _localStorageService
+@inject HttpClient _httpClient
+@inject NavigationManager NavManager
+
+<MudPaper Elevation="8"
+          Width="250px"
+          Class="d-inline-flex py-3"
+          Square="true"
+          style="position:fixed; top:0; ">
+    <MudNavMenu Class="mud-width-full">
+        <MudDivider Class="my-2" />
+        <MudNavLink Href="/login"
+                    style="vertical-align: middle; font-size: 22px;">
+            <MudIcon Icon="@Icons.Filled.Login"
+                     Color="Color.Success"
+                     Size="Size.Medium"
+                     style="vertical-align: middle; margin-right: 10px;" />
+            Sign In
+        </MudNavLink>
+        <MudDivider Class="my-6" />
+        <MudNavGroup Title="Dashboard" Expanded="true" style="font-size: 22px;">
+            <MudNavLink Href="/users"
+                        style="vertical-align: middle; font-size: 22px;">
+                <MudIcon Icon="@Icons.Filled.People"
+                         Color="Color.Success"
+                         Size="Size.Medium"
+                         style="vertical-align: middle; margin-right: 10px;" />
+                Users
+            </MudNavLink>
+            <MudNavLink Href="/roles"
+                        style="vertical-align: middle; font-size: 22px;">
+                <MudIcon Icon="@Icons.Filled.List"
+                         Color="Color.Success"
+                         Size="Size.Medium"
+                         style="vertical-align: middle; margin-right: 10px;" />
+                Roles
+            </MudNavLink>
+        </MudNavGroup>
+        <MudDivider Class="my-6" />
+        <MudNavLink OnClick="DeleteToken"
+                    style="vertical-align: middle; font-size: 22px;">
+            <MudIcon Icon="@Icons.Filled.Logout"
+                     Color="Color.Success"
+                     Size="Size.Medium"
+                     style="vertical-align: middle; margin-right: 10px;" />
+            Log Out
+        </MudNavLink>
+
+        <MudDivider Class="my-2" />
+    </MudNavMenu>
+</MudPaper>
+
+@code {
+    private async Task DeleteToken()
+    {
+        _localStorageService.RemoveItem("accessToken");
+        _localStorageService.SetItem("userPermissions", "");
+        _httpClient.DefaultRequestHeaders.Clear();
+
+        NavManager.NavigateTo("/login");
+    }
+}

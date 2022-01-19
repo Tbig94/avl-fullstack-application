@@ -1,0 +1,63 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Permission {
+  @@map(name: "permissions")
+  id Int @id @default(autoincrement())
+  name String @unique @db.VarChar(30)
+  description String @db.VarChar(200)
+  active Boolean
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  permission_roles PermissionRole[]
+}
+
+model Role {
+  @@map(name: "roles")
+  id Int @id @default(autoincrement())
+  name String @unique @db.VarChar(30)
+  description String @db.VarChar(200)
+  active Boolean
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  permission_roles PermissionRole[]
+  user_roles UserRole[]
+}
+
+model User {
+  @@map(name: "users")
+  id Int @id @default(autoincrement())
+  username String @unique @db.VarChar(30)
+  password String @db.VarChar(100)
+  active Boolean 
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user_roles UserRole[]
+}
+
+model PermissionRole {
+  @@map(name: "permission_roles")
+  id Int @id @default(autoincrement())
+  permissions Permission @relation(fields: [permission_id], references: [id])
+  permission_id Int
+  roles Role @relation(fields: [role_id], references: [id])
+  role_id Int
+}
+
+model UserRole {
+  @@map(name: "user_roles")
+  id Int @id @default(autoincrement())
+  users User @relation(fields: [user_id], references: [id])
+  user_id Int
+  roles Role @relation(fields: [role_id], references: [id])
+  role_id Int
+}

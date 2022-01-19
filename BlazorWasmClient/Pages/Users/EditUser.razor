@@ -1,0 +1,99 @@
+﻿@page "/users/edit-user/{UserId}"
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using BlazorWasmClient.Services;
+@using BlazorWasmClient.Models.ViewModels;
+@inject IUserService UserService
+@inject IRoleService RoleService
+@inject ILocalStorageService LocalStorageService
+@inject NavigationManager NavManager
+
+<PageTitle>Edit User</PageTitle>
+<div style="max-width: 400px; margin: auto; margin-top: 50px;">
+    <MudCard Elevation="8">
+        <MudText Typo="Typo.subtitle2" Align="Align.Center" style="font-size: 30px; padding-top: 20px;">Edit User</MudText>
+        <MudCardContent>
+            <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+                <MudTextField @bind-value=username
+                              T="string" 
+                              Label="Username"
+                              Required="true"
+                              RequiredError="Username is required!" />
+                <MudTextField @bind-value=password
+                              InputType="InputType.Password"
+                              T="string" 
+                              Label="Password"
+                              Required="true"
+                              RequiredError="Password is required!" />
+                <MudField style="margin-top: 20px;" Label="Roles" Variant="Variant.Outlined" InnerPadding="false">
+                    @foreach (var item in roleNamesFromDb)
+                    {
+                        <MudCheckBox T="bool" Class="ml-n2" Label=@item />
+                    }
+                </MudField>
+            </MudForm>
+        </MudCardContent>
+        <MudCardActions style="padding-bottom: 30px;">
+            <MudButton Variant="Variant.Filled" OnClick="NavigateBack">Back</MudButton>
+            <MudFab Color="Color.Secondary"
+                    Icon="@Icons.Material.Filled.Edit"
+                    Size="Size.Small"
+                    IconSize="Size.Small"
+                    Label="Edit"
+                    OnClick="SubmitUser"
+                    Disabled="@(!success)"
+                    Class="ml-auto">
+            </MudFab>
+        </MudCardActions>
+    </MudCard>
+</div>
+
+@code {
+    [Parameter]
+    public string UserId { get; set; }
+
+    bool success;
+    string[] errors = { };
+    MudTextField<string> pwField1;
+    MudForm form;
+
+    private string username = "";
+    private string password = "";
+    private bool active = true;
+    private List<string> roles = new List<string>();
+
+    private List<string> roleNamesFromDb = new List<string>();
+    private List<RoleGetModel> rolesFromDb = new List<RoleGetModel>();
+
+    private string permissionList;
+
+    protected override async Task OnInitializedAsync()
+    {
+        permissionList = await LocalStorageService.GetItem<string>("userPermissions");
+        if (!permissionList.Contains("write-user"))
+        {
+            NavManager.NavigateTo("/users");
+        }
+
+        rolesFromDb = await RoleService.GetRoles("", "", "", "", "");
+        for (var i = 0; i < rolesFromDb.Count; i++)
+        {
+            roleNamesFromDb.Add(rolesFromDb[i].Name);
+        }
+    }
+
+    public async Task SubmitUser()
+    {
+        int id = Int32.Parse(UserId);
+        roles.Add("user");
+        roles.Add("super-admin");
+        UserWriteVM user = new UserWriteVM() { Username = username, Password = password, Active = active, Roles = roles };
+        await UserService.EditUser(user, id);
+        NavManager.NavigateTo("/users/");
+    }
+
+    public void NavigateBack()
+    {
+        NavManager.NavigateTo("/users");
+    }
+}

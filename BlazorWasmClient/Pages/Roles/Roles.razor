@@ -1,0 +1,196 @@
+﻿@page "/roles"
+@using BlazorWasmClient.Models
+@using BlazorWasmClient.Models.ViewModels
+@using BlazorWasmClient.Services
+@inject NavigationManager NavManager
+@inject IRoleService RoleService
+@inject IUserService UserService
+@inject ILocalStorageService LocalStorageService
+
+
+<PageTitle>Roles</PageTitle>
+@if (permissionList.Contains("read-role"))
+{
+    <div style="margin-left: 250px;">
+        <MudTable Elevation="8"
+              @ref="@_table"
+              Items="@rolesNew"
+              RowsPerPage="8"
+              Dense="false"
+              Hover="true"
+              Striped="true"
+              Bordered="true"
+              style="margin-top: 10px; padding-left: 50px; padding-right: 50px;">
+            <ToolBarContent>
+                <MudText Typo="Typo.subtitle2" Align="Align.Center" style="margin-top: 25px; margin-bottom: 30px; font-size: 36px;">Roles</MudText>
+                <MudSpacer></MudSpacer>
+                <MudCardContent>
+                    <MudForm>
+                        <MudTextField @bind-Value="keyWord"
+                                  T="string"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  IconSize="Size.Medium"
+                                  Class="mt-0"
+                                  style="width: 300px; margin-left: auto; margin-right: 0;">
+                        </MudTextField>
+                    </MudForm>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudFab Color="Color.Secondary"
+                        Icon="@Icons.Material.Filled.Edit"
+                        Size="Size.Small"
+                        IconSize="Size.Small"
+                        Label="Search"
+                        OnClick="OnInitializedAsync"
+                        Class="ml-auto">
+                    </MudFab>
+                </MudCardActions>
+            </ToolBarContent>
+            <ColGroup>
+                <col style="width: 5%;" />
+                <col style="width: 13%;" />
+                <col style="width: 20%;" />
+                <col style="width: 7%;" />
+                <col style="width: 13%;" />
+                <col style="width: 13%;" />
+                <col style="width: 12%;" />
+                <col style="width: 17%;" />
+            </ColGroup>
+            <HeaderContent>
+                <MudTh>Id</MudTh>
+                <MudTh>Name</MudTh>
+                <MudTh>Description</MudTh>
+                <MudTh>Active</MudTh>
+                <MudTh>Created At</MudTh>
+                <MudTh>Updated At</MudTh>
+                <MudTh>Permissions</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Id">@context.Id</MudTd>
+                <MudTd DataLabel="Name">@context.Name</MudTd>
+                <MudTd DataLabel="Description">@context.Description</MudTd>
+                <MudTd DataLabel="Active">@context.Active</MudTd>
+                <MudTd DataLabel="CreatedAt">@context.Created_At</MudTd>
+                <MudTd DataLabel="UpdatedAt">@context.Updated_At</MudTd>
+                <MudTd DataLabel="Permissions">@context.Permissions</MudTd>
+                <MudTd DataLabel="">
+                    @if (permissionList.Contains("write-role"))
+                    {
+                    <MudFab Color="Color.Primary"
+                        Icon="@Icons.Material.Filled.Edit"
+                        Size="Size.Small"
+                        IconSize="Size.Small"
+                        Label="Edit"
+                        style="margin-right: 20px; margin-left: 20px;"
+                        Class="ma-2"
+                        @onclick="() => EditClick(context.Id)">
+                    </MudFab>
+                    }
+                @if (permissionList.Contains("delete-role"))
+                    {
+                    <MudFab Color="Color.Secondary"
+                        Icon="@Icons.Material.Filled.Delete"
+                        Size="Size.Small"
+                        IconSize="Size.Small"
+                        Label="Delete"
+                        style="margin-right: 20px; margin-left: 20px;"
+                        Class="ma-2"
+                        @onclick="() => DeleteClick(context.Id)">
+                    </MudFab>
+                    }
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudPagination Variant="Variant.Filled"
+                           Size="Size.Large"
+                           ShowFirstButton="true"
+                           ShowLastButton="true"
+                           SelectedChanged="PageChanged"
+                           Count="@((_table.GetFilteredItemsCount() + _table.RowsPerPage - 1) / _table.RowsPerPage)"
+                           Class="pa-4"
+                           style="margin-left: 550px;" />
+        </PagerContent>
+    </MudTable>
+</div>
+    @if (permissionList.Contains("write-role"))
+    {
+        <div class="mt-6">
+            <MudFab OnClick="AddClick"
+            Color="Color.Secondary"
+            Icon="@Icons.Material.Filled.Add"
+            Size="Size.Large"
+            IconSize="Size.Large"
+            Label="Add Role"
+            Class="ma-2"
+            style="position: absolute; right: 100px;" />
+        </div>
+    }
+}
+
+@code {
+    private int _selected = 1;
+    private List<RoleGetModel> roles;
+    private List<RoleReadVM> rolesNew = new List<RoleReadVM>();
+    private MudTable<RoleReadVM> _table;
+    private string active = "";
+    private string keyWord = "";
+    private string sortCol = "";
+    private string order = "";
+    private string page = "";
+    private string permissionList = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        permissionList = await LocalStorageService.GetItem<string>("userPermissions");    
+        if (!permissionList.Contains("read-user"))
+        {
+            NavManager.NavigateTo("/login");
+        }
+
+        roles = await RoleService.GetRoles(active, keyWord, sortCol, order, page);
+
+        foreach (var roleEl in roles)
+        {
+            rolesNew.Add(new RoleReadVM
+                {
+                    Id = roleEl.Id,
+                    Name = roleEl.Name,
+                    Description = roleEl.Description,
+                    Active = roleEl.Active,
+                    Created_At = roleEl.Created_At,
+                    Updated_At = roleEl.Updated_At,
+                    Permissions = ""
+                });
+            string permissionListStr = "";
+            foreach (var permissionNameEl in roleEl.Permissions)
+            {
+                permissionListStr += permissionNameEl + ", ";
+            }
+            rolesNew.Last().Permissions = permissionListStr;
+        }
+    }
+
+    private void PageChanged(int i)
+    {
+        _table.NavigateTo(i - 1);
+    }
+
+    private async Task AddClick()
+    {
+        NavManager.NavigateTo($"/roles/add-role");
+    }
+
+    private async Task EditClick(int id)
+    {
+        NavManager.NavigateTo($"/roles/edit-role/{id}");
+    }
+
+    private async Task DeleteClick(int id)
+    {
+        Console.WriteLine($"IN DeleteClick(), id: {id}");
+        await RoleService.DeleteRole(id);
+        NavManager.NavigateTo(NavManager.Uri, forceLoad: true);
+    }
+}

@@ -1,0 +1,81 @@
+﻿@page "/login"
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using BlazorWasmClient.Services;
+@using BlazorWasmClient.Models.ViewModels;
+@inject IUserService UserService
+@inject IRoleService RoleService
+@inject IPermissionService PermissionService
+@inject IGetTokenService TokenService
+@inject NavigationManager NavManager
+@inject ILocalStorageService LocalStorageService
+
+<PageTitle>Sign In User</PageTitle>
+<div style="max-width: 400px; margin: auto; margin-top: 50px;">
+    <MudCard Elevation="8">
+        <MudText Typo="Typo.subtitle2"
+                 Align="Align.Center"
+                 style="font-size: 24px; padding-top: 20px;">
+            Sign in with your <i>username</i> and <i>password</i>.
+        </MudText>
+        <MudCardContent>
+            <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+                <MudTextField @bind-Value="username"
+                              T="string"
+                              Label="Username"
+                              Required="true"
+                              RequiredError="Username is required!" />
+                <MudTextField @bind-Value="password"
+                              InputType="InputType.Password"
+                              T="string"
+                              Label="Password"
+                              Required="true"
+                              RequiredError="Password is required!" />
+            </MudForm>
+        </MudCardContent>
+        <MudCardActions style="padding-bottom: 20px;">
+            <MudFab Color="Color.Secondary"
+                    Icon="@Icons.Filled.Login"
+                    OnClick="LoginUser"
+                    Disabled="@(!success)"
+                    Class="ml-auto"
+                    Label="Sign In">
+            </MudFab>
+        </MudCardActions>
+        @if (showError)
+        {
+            <MudText Typo="Typo.subtitle2"
+                 Align="Align.Center"
+                 style="font-size: 18px; color: red; padding-bottom: 20px;">
+                Error: Wrong username or password.
+            </MudText>
+        }
+    </MudCard>
+</div>
+
+@code {
+    bool success;
+    string[] errors = { };
+    MudForm form;
+    private string username = "";
+    private string password = "";
+    bool showError = false;
+    private List<UserGetModel> users;
+
+    public async Task LoginUser()
+    {
+        if (await TokenService.GetToken(username, password))
+        {
+            users = await UserService.GetUsers("", username, "", "", "");
+            List<string> currentUserRoles = users[0].Roles;
+            await PermissionService.GetPermissionForUser(currentUserRoles);
+
+            NavManager.NavigateTo("/users");
+        }
+        else
+        {
+            showError = true;
+            NavManager.NavigateTo(NavManager.Uri);
+        }
+    }
+}
