@@ -49,9 +49,6 @@ const compare = async function cmp(req, res, next) {
 
 const verifyRole = function getRoleFunc(permissionName) {
   return async (req, res, next) => {
-    //  permissionName paraméter permissionId-je (egy rekord)
-    // permissionName: 'read-user'
-    // permissionId: 1
     const permissionId = await permission
       .findUnique({
         where: {
@@ -62,12 +59,11 @@ const verifyRole = function getRoleFunc(permissionName) {
         },
       })
       .catch((err) => {
-        logger.error(`500 - GET users`);
+        logger.error(`500 - verifyRole - jwtAuth`);
         return res.status(500).json({ error: `Error occured` });
       });
 
-    // permissionId-hez tartozó roleId-k (több rekord)
-    // roleId list: [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+    // roleId - több érték - (1, 2, 3, 4, 5)
     const roleId = await permissionRole
       .findMany({
         where: {
@@ -78,20 +74,17 @@ const verifyRole = function getRoleFunc(permissionName) {
         },
       })
       .catch((err) => {
-        logger.error(`500 - GET users`);
+        logger.error(`500 - verifyRole - jwtAuth`);
         return res.status(500).json({ error: `Error occured` });
       });
 
-    // roleId-k mentése listába
-    // roleId list: [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+    // roleIdList - több érték - [1, 2, 3, 4, 5]
     const roleIdList = [];
     roleId.forEach((roleIdEl) => {
       roleIdList.push(roleIdEl.role_id);
     });
 
-    // adott user ID-ja (egy rekord)
-    // username: 'user_7', id: 7
-    // userData.id: 7
+    // userData(ID) - 1 érték - (8)
     const userData = await user
       .findUnique({
         where: {
@@ -102,19 +95,13 @@ const verifyRole = function getRoleFunc(permissionName) {
         },
       })
       .catch((err) => {
-        logger.error(`500 - GET users`);
+        logger.error(`500 - verifyRole - jwtAuth`);
         return res.status(500).json({ error: `Error occured` });
       });
 
-    // végigmegy a roleIdList-en
-    // role_id list: [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
-    // user_id: 7
-    // user_id: 7, role_id: 1 MATCH
     let userRoleAccepted = false;
+    // userRoleData - 1 darab érték - 2 VAGY 3
     for (let i = 0; i < roleIdList.length; i++) {
-      //console.log(`\n for - ${i}`);
-      //console.log(`user_id: ${userData.id}`);
-      //console.log(`role_id: ${roleIdList[i]}`);
       const userRoleData = await userRole
         .findMany({
           where: {
@@ -126,21 +113,14 @@ const verifyRole = function getRoleFunc(permissionName) {
           },
         })
         .catch((err) => {
-          //console.log(`userRoleData - await userRole.findUnique(...)`);
-          //console.log(err);
-          logger.error(`403 - Login unauthorized `);
-          return res.status(403).json({ error: `Error occured` });
+          logger.error(`500 - verifyRole - jwtAuth`);
+          return res.status(500).send(err.stack || e);
         });
 
-      /**
-       * FOLYT KÖV...
-       */
-      //console.log(`userRoleData[0].id: ${userRoleData[0].id}`);
-      //if (userRoleData[0].id > 0) {
-      if (userRoleData.length > 0) {
-        //console.log(`userRoleAccepted`);
+      if (userRoleData.length === 1) {
         userRoleAccepted = true;
         next();
+        return;
       }
     }
 

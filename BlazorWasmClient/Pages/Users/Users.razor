@@ -7,13 +7,13 @@
 @inject ILocalStorageService LocalStorageService
 
 <PageTitle>Users</PageTitle>
-@if (permissionList.Contains("read-user"))
+@if (userPermissions.Contains("read-user"))
 {
     <div style="margin-left: 250px;">
         <MudTable Elevation="8"
               @ref="@_table"
               Items="@usersNew"
-              RowsPerPage="8"
+              RowsPerPage="6"
               Dense="false"
               Hover="true"
               Striped="true"
@@ -74,7 +74,7 @@
                 <MudTd DataLabel="UpdatedAt">@context.Updated_At</MudTd>
                 <MudTd DataLabel="Roles">@context.Roles</MudTd>
                 <MudTd DataLabel="">
-                    @if (permissionList.Contains("write-user"))
+                    @if (userPermissions.Contains("write-user"))
                     {
                     <MudFab Color="Color.Primary"
                         Icon="@Icons.Material.Filled.Edit"
@@ -86,7 +86,7 @@
                         @onclick="() => EditClick(context.Id)">
                     </MudFab>
                     }
-                @if (permissionList.Contains("delete-user"))
+                @if (userPermissions.Contains("delete-user"))
                 {
                     <MudFab Color="Color.Secondary"
                         Icon="@Icons.Material.Filled.Delete"
@@ -112,7 +112,7 @@
         </PagerContent>
     </MudTable>
     </div>
-    @if (permissionList.Contains("write-user"))
+    @if (userPermissions.Contains("write-user"))
     {
         <div class="mt-6">
             <MudFab OnClick="AddClick"
@@ -130,25 +130,26 @@
 @code {
     private int _selected = 1;
     private List<UserGetModel> users;
-    private List<UserReadVM> usersNew = new List<UserReadVM>();
+    private List<UserReadVM> usersNew;
     private MudTable<UserReadVM> _table;
     private string active = "";
     private string keyWord = "";
     private string sortCol = "";
     private string order = "";
     private string page = "";
-    private string permissionList = "";
+    private string userPermissions = "";
 
     protected override async Task OnInitializedAsync()
     {
-        permissionList = await LocalStorageService.GetItem<string>("userPermissions");
-        if (!permissionList.Contains("read-user"))
+        userPermissions = await LocalStorageService.GetItem<string>("userPermissions");
+        if (string.IsNullOrEmpty(userPermissions))
         {
             NavManager.NavigateTo("/login");
+            return;
         }
 
         users = await UserService.GetUsers(active, keyWord, sortCol, order, page);
-
+        usersNew = new List<UserReadVM>();
         foreach (var userEl in users)
         {
             usersNew.Add(new UserReadVM
@@ -168,7 +169,6 @@
             }
             usersNew.Last().Roles = roleList;
         }
-
     }
 
     private void PageChanged(int i)

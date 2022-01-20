@@ -8,23 +8,6 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-ILocalStorageService _localStorageService;
-HttpClient _httpClient;
-
-async Task StartAsync(CancellationToken cancellationToken)
-{
-    _localStorageService.RemoveItem("accessToken");
-    _localStorageService.SetItem("userPermissions", "");
-    _httpClient.DefaultRequestHeaders.Clear();
-}
-
-async Task StopAsync(CancellationToken cancellationToken)
-{
-    _localStorageService.RemoveItem("accessToken");
-    _localStorageService.SetItem("userPermissions", "");
-    _httpClient.DefaultRequestHeaders.Clear();
-}
-
 //builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
 builder.Services.AddCors(options =>

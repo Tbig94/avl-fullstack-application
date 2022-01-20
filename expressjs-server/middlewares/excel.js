@@ -6,10 +6,8 @@ const { role, user, permission } = new PrismaClient();
 const convertJsonToExcel = async function writeToExcel(next) {
   let dir = './data';
   if (!fs.existsSync(dir)) {
-    console.log(`data dir NOT exists`);
     fs.mkdirSync(dir, { recursive: true });
   } else {
-    console.log(`data dir exists`);
   }
 
   const permissionJSON = await getPermissionData();

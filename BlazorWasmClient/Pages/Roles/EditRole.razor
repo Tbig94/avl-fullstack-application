@@ -25,9 +25,15 @@
                               Required="true"
                               RequiredError="Description is required!" />
                 <MudField style="margin-top: 20px;" Label="Permissions" Variant="Variant.Outlined" InnerPadding="false">
-                    @foreach (var item in permissionNamesFromDb)
+                    @foreach (var item in basePermissionNames)
                     {
-                        <MudCheckBox T="bool" Class="ml-n2" Label=@item />
+                        <input class="custom-checkbox" type="checkbox" @onchange="eventArgs => { CheckboxClicked(item, eventArgs.Value); }" />
+                        @item
+                        @*<MudCheckBox T="bool"
+                                     Class="ml-n2"
+                                     Label=@item
+                                     Color="Color.Primary"
+                                     CheckedChanged="eventArgs => { CheckboxClicked(item, eventArgs.Value); }" />*@
                     }
                 </MudField>
             </MudForm>
@@ -55,39 +61,59 @@
     string[] errors = { };
     MudTextField<string> pwField1;
     MudForm form;
-
     private string name = "";
     private string description = "";
     private bool active = true;
-    private List<string> permissions = new List<string>();
-
-    private List<PermissionReadMode> permissionsFromDb = new List<PermissionReadMode>();
-    private List<string> permissionNamesFromDb = new List<string>();
-
-    private string permissionList = "";
+    private List<string> basePermissionNames = new List<string>{
+        "read-user",
+        "write-user",
+        "delete-user",
+        "read-role",
+        "write-role",
+        "delete-role"
+    };
+    private string userPermissions = "";
+    public List<string> permissionListFromCheckbox = new List<string>();
 
     protected override async Task OnInitializedAsync()
     {
-        permissionList = await LocalStorageService.GetItem<string>("userPermissions");
-        if (!permissionList.Contains("write-role"))
+        userPermissions = await LocalStorageService.GetItem<string>("userPermissions");
+        if (!userPermissions.Contains("write-role"))
         {
             NavManager.NavigateTo("/roles");
+            return;
         }
     }
 
     public async Task SubmitRole()
     {
         int id = Int32.Parse(RoleId);
-        permissions.Add("read-user");
-        permissions.Add("write-user");
-        permissions.Add("delete-user");
-        RoleWriteVM role = new RoleWriteVM() { Name = name, Description = description, Active = active, Permissions = permissions };
+        RoleWriteVM role = new RoleWriteVM() { Name = name, Description = description, Active = active, Permissions = permissionListFromCheckbox };
         await RoleService.EditRole(role, id);
+
         NavManager.NavigateTo("/roles/");
     }
 
     public void NavigateBack()
     {
         NavManager.NavigateTo("/roles");
+    }
+
+    void CheckboxClicked(string permissionEl, object checkedValue)
+    {
+        if ((bool)checkedValue)
+        {
+            if (!permissionListFromCheckbox.Contains(permissionEl))
+            {
+                permissionListFromCheckbox.Add(permissionEl);
+            }
+        }
+        else
+        {
+            if (permissionListFromCheckbox.Contains(permissionEl))
+            {
+                permissionListFromCheckbox.Remove(permissionEl);
+            }
+        }
     }
 }

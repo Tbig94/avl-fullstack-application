@@ -1,6 +1,5 @@
 ﻿using BlazorWasmClient.Models.ViewModels;
 using Microsoft.AspNetCore.Components;
-using Newtonsoft.Json.Linq;
 using System.Net.Http.Json;
 
 namespace BlazorWasmClient.Services
@@ -29,7 +28,7 @@ namespace BlazorWasmClient.Services
                 return false;
             } else
             {
-                _localStorageService.SetItem("accessToken", resultString);
+                await _localStorageService.SetItem("accessToken", resultString);
                 return true;
             }
         }

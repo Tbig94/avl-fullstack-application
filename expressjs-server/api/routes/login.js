@@ -28,6 +28,7 @@ router.post(
 
 function loginUser() {
   return async (req, res) => {
+    const expireTime = process.env.EXPIRE_TIME;
     const userData = {
       username: req.body.username,
       password: req.body.password,
@@ -54,7 +55,7 @@ function loginUser() {
     }
 
     const accessToken = jwt.sign(userData, process.env.ACCESS_TOKEN_SECRET, {
-      expiresIn: '300s',
+      expiresIn: expireTime,
     });
     res.send(accessToken);
   };

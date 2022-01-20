@@ -42,6 +42,7 @@ model User {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   user_roles UserRole[]
+  products Product[]
 }
 
 model PermissionRole {
@@ -60,4 +61,21 @@ model UserRole {
   user_id Int
   roles Role @relation(fields: [role_id], references: [id])
   role_id Int
+}
+
+model Product {
+  @@map(name: "products")
+  id Int @id @default(autoincrement())
+  name String @db.VarChar(100)
+  product_types ProductType @relation(fields: [type_id], references: [id])
+  type_id Int
+  users User @relation(fields: [creator_id], references: [id])
+  creator_id Int
+}
+
+model ProductType {
+  @@map(name: "product_types")
+  id Int @id @default(autoincrement())
+  type String @db.VarChar(100)
+  products Product[]
 }

@@ -4,18 +4,16 @@
 @using BlazorWasmClient.Services
 @inject NavigationManager NavManager
 @inject IRoleService RoleService
-@inject IUserService UserService
 @inject ILocalStorageService LocalStorageService
 
-
 <PageTitle>Roles</PageTitle>
-@if (permissionList.Contains("read-role"))
+@if (userPermissions.Contains("read-role"))
 {
     <div style="margin-left: 250px;">
         <MudTable Elevation="8"
               @ref="@_table"
               Items="@rolesNew"
-              RowsPerPage="8"
+              RowsPerPage="6"
               Dense="false"
               Hover="true"
               Striped="true"
@@ -76,7 +74,7 @@
                 <MudTd DataLabel="UpdatedAt">@context.Updated_At</MudTd>
                 <MudTd DataLabel="Permissions">@context.Permissions</MudTd>
                 <MudTd DataLabel="">
-                    @if (permissionList.Contains("write-role"))
+                    @if (userPermissions.Contains("write-role"))
                     {
                     <MudFab Color="Color.Primary"
                         Icon="@Icons.Material.Filled.Edit"
@@ -88,7 +86,7 @@
                         @onclick="() => EditClick(context.Id)">
                     </MudFab>
                     }
-                @if (permissionList.Contains("delete-role"))
+                @if (userPermissions.Contains("delete-role"))
                     {
                     <MudFab Color="Color.Secondary"
                         Icon="@Icons.Material.Filled.Delete"
@@ -114,7 +112,7 @@
         </PagerContent>
     </MudTable>
 </div>
-    @if (permissionList.Contains("write-role"))
+    @if (userPermissions.Contains("write-role"))
     {
         <div class="mt-6">
             <MudFab OnClick="AddClick"
@@ -132,25 +130,27 @@
 @code {
     private int _selected = 1;
     private List<RoleGetModel> roles;
-    private List<RoleReadVM> rolesNew = new List<RoleReadVM>();
+    private List<RoleReadVM> rolesNew;
     private MudTable<RoleReadVM> _table;
     private string active = "";
     private string keyWord = "";
     private string sortCol = "";
     private string order = "";
     private string page = "";
-    private string permissionList = "";
+    private string userPermissions = "";
 
     protected override async Task OnInitializedAsync()
     {
-        permissionList = await LocalStorageService.GetItem<string>("userPermissions");    
-        if (!permissionList.Contains("read-user"))
+        userPermissions = await LocalStorageService.GetItem<string>("userPermissions");
+        if (string.IsNullOrEmpty(userPermissions))
         {
             NavManager.NavigateTo("/login");
+            return;
         }
 
         roles = await RoleService.GetRoles(active, keyWord, sortCol, order, page);
 
+        rolesNew = new List<RoleReadVM>();
         foreach (var roleEl in roles)
         {
             rolesNew.Add(new RoleReadVM
@@ -189,7 +189,6 @@
 
     private async Task DeleteClick(int id)
     {
-        Console.WriteLine($"IN DeleteClick(), id: {id}");
         await RoleService.DeleteRole(id);
         NavManager.NavigateTo(NavManager.Uri, forceLoad: true);
     }

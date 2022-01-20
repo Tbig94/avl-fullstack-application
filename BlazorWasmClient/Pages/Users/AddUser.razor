@@ -28,9 +28,13 @@
                 <MudField style="margin-top: 20px;" Label="Roles" Variant="Variant.Outlined" InnerPadding="false">
                     @foreach (var item in roleNamesFromDb)
                     {
-                        <MudCheckBox T="bool"
+                        <input class="custom-checkbox" type="checkbox" @onchange="eventArgs => { CheckboxClicked(item, eventArgs.Value); }" />
+                        @item
+                        @*<MudCheckBox T="bool"
                                      Class="ml-n2"
-                                     Label=@item />
+                                     Label=@item
+                                     Color="Color.Primary"
+                                     CheckedChanged="eventArgs => { CheckboxClicked(item, eventArgs.Value); }" />*@
                     }
                 </MudField>
             </MudForm>
@@ -55,28 +59,22 @@
     string[] errors = { };
     MudTextField<string> pwField1;
     MudForm form;
-
     private string username = "";
     private string password = "";
     private bool active = true;
-    private List<string> roles = new List<string>();
-
     private List<string> roleNamesFromDb = new List<string>();
     private List<RoleGetModel> rolesFromDb = new List<RoleGetModel>();
-
-    private string permissionList = "";
-
-    protected override async Task OnParametersSetAsync()
-        {
-            await OnInitializedAsync();
-        }
+        public List<string> roleListFromCheckbox = new List<string>();
+    private string userPermissions = "";
 
     protected override async Task OnInitializedAsync()
     {
-        permissionList = await LocalStorageService.GetItem<string>("userPermissions");
-        if (!permissionList.Contains("write-user"))
+        userPermissions = await LocalStorageService.GetItem<string>("userPermissions");
+        if (!userPermissions.Contains("write-user"))
         {
-            NavManager.NavigateTo("/users");
+            Console.WriteLine($"IN AddUser, NO write-user");
+            NavManager.NavigateTo("/login");
+            return;
         }
 
         rolesFromDb = await RoleService.GetRoles("", "", "", "", "");
@@ -88,14 +86,37 @@
 
     public async Task SubmitUser()
     {
-        roles.Add("user");
-        UserWriteVM user = new UserWriteVM() { Username = username, Password = password, Active = active, Roles = roles };
+        UserWriteVM user = new UserWriteVM() { Username = username, Password = password, Active = active, Roles = roleListFromCheckbox };
         await UserService.AddUser(user);
+
+        foreach (var roleEl in roleListFromCheckbox)
+        {
+            Console.WriteLine($"roleEl: {roleEl}");
+        }
+
         NavManager.NavigateTo("/users/");
     }
 
     public void NavigateBack()
     {
-        NavManager.NavigateTo("/roles");
+        NavManager.NavigateTo("/users");
+    }
+
+    void CheckboxClicked(string roleEl, object checkedValue)
+    {
+        if ((bool)checkedValue)
+        {
+            if (!roleListFromCheckbox.Contains(roleEl))
+            {
+                roleListFromCheckbox.Add(roleEl);
+            }
+        }
+        else
+        {
+            if (roleListFromCheckbox.Contains(roleEl))
+            {
+                roleListFromCheckbox.Remove(roleEl);
+            }
+        }
     }
 }

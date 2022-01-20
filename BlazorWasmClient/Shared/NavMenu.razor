@@ -37,7 +37,7 @@
             </MudNavLink>
         </MudNavGroup>
         <MudDivider Class="my-6" />
-        <MudNavLink OnClick="DeleteToken"
+        <MudNavLink OnClick="LogoutClick"
                     style="vertical-align: middle; font-size: 22px;">
             <MudIcon Icon="@Icons.Filled.Logout"
                      Color="Color.Success"
@@ -45,16 +45,15 @@
                      style="vertical-align: middle; margin-right: 10px;" />
             Log Out
         </MudNavLink>
-
         <MudDivider Class="my-2" />
     </MudNavMenu>
 </MudPaper>
 
 @code {
-    private async Task DeleteToken()
+    private async Task LogoutClick()
     {
-        _localStorageService.RemoveItem("accessToken");
-        _localStorageService.SetItem("userPermissions", "");
+        await _localStorageService.RemoveItem("accessToken");
+        await _localStorageService.SetItem("userPermissions", "");
         _httpClient.DefaultRequestHeaders.Clear();
 
         NavManager.NavigateTo("/login");

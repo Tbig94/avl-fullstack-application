@@ -20,6 +20,8 @@
 
     BCRYPT_SALT=
 
+    EXPIRE_TIME=600s
+
 #### 2.) migráció:
 
     npx prisma migrate dev --name MIGRATION_NAME
