@@ -1,16 +1,18 @@
-# **_Express JS + PostgreSQL app_**
+# **_Blazor + ExpressJS + PostgreSQL alkalmazás_**
 
-# Futtatás
+## Futtatáshoz szükséges: Node v16 | PostgreSQL 14 | .NET 6.0
 
-#### szükséges: Node v16, PostgreSQL 14
+## I. Backend
 
-## I. package-k telepítése
+#### navigálj az "avl-fullstack-application/expressjs-server" könyvtárban
+
+#### 1.) package-ek telepítése:
 
     npm install
 
-## II. Prisma adatbázis/táblák/adatok
+#### 2.) .env fájl
 
-#### 1.) hozz létre egy .env fájlt és másold bele a database url-t (generáld le az ACCESS_TOKEN_SECRET-et és a BCRYPT_SALT-ot):
+hozz létre egy .env a fájlt és másold bele a következőt (generáld le az ACCESS_TOKEN_SECRET-et és a BCRYPT_SALT-ot, add meg az adatbázishoz tartozó USERNAME, PASSWORD, DATABASE_NAME változókat)
 
     DATABASE_URL="postgresql://USERNAME:PASSWORD@localhost:5432/DATABASE_NAME?schema=public"
 
@@ -22,7 +24,7 @@
 
     EXPIRE_TIME=600s
 
-#### 2.) migráció:
+#### 3.) adatbázis létrehozás - migráció:
 
     npx prisma migrate dev --name MIGRATION_NAME
 
@@ -30,49 +32,11 @@
 
     npx prisma db seed
 
-## III. futtatás(dev környezetben)
+#### 4.) futtatás(dev környezetben)
 
-    ExpressJS szerver:
-        cd expressjs-server
-        npm run dev
+    npm run dev
 
-    Blazor kliens:
-        cd BlazorWasmClient
-        dotnet run
-
-### Egyéb parancsok
-
-- Swagger doku generálás és szerver indítás
-
-        node swagger.js
-
-- seed-elés
-
-        npx prisma db seed
-
-- adatbázis reset
-
-        npx prisma migrate reset
-
-- prisma client telepítés
-
-        npm install @prisma/client
-
-- prisma studio
-
-        npx prisma studio
-
-  [prisma studio](http://localhost:5555/)
-
-### Endpointok
-
-#### szerver home oldal: [localhost/](http://localhost:5000)
-
-#### szerver swagger dokumentáció: [localhost/api/docs/](http://localhost:5000/api/docs/)
-
-### kliens login oldal: [login/]https://localhost:7150/login
-
-### Csomagok
+#### package-ek
 
     @prisma/client
     bcrypt
@@ -94,3 +58,28 @@
     Dev:
         nodemon
         prisma
+
+## II. Frontend
+
+#### 1.) futtatás(dev környezetben)
+
+- navigálj a "avl-fullstack-application/BlazorWasmClient" könyvtárba:
+
+        dotnet run
+
+#### package-ek
+
+    Microsoft.AspNetCore.Components.WebAssembly
+    Microsoft.AspNetCore.Components.WebAssembly.DevServer
+    Microsoft.AspNetCore.Cors
+    Microsoft.Extensions.Http
+    MudBlazor
+    Newtonsoft.Json
+
+### Endpointok
+
+- #### [szerver - home oldal](http://localhost:5000)
+
+- #### [szerver - swagger dokumentáció](http://localhost:5000/api/docs/)
+
+- #### [kliens - login oldal](https://localhost:7150/login)
