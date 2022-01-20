@@ -37,7 +37,7 @@
         npm run dev
 
     Blazor kliens:
-        BlazorWasmClient
+        cd BlazorWasmClient
         dotnet run
 
 ### Egyéb parancsok
